@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "admin-pannl-4-81334913-5247e"
+  },
+  "targets": {
+    "admin-pannl-4-81334913-5247e": {
+      "hosting": {
+        "postbill": [
+          "postbill"
+        ],
+        "posbillingcgdsk": [
+          "posbillingcgdsk"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

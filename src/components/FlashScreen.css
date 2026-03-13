@@ -1,0 +1,41 @@
+.flash-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #fff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity 1s ease-in-out;
+}
+
+.flash-screen.fade-out {
+  opacity: 0;
+}
+
+.flash-logo {
+  max-width: 150px;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.flash-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-top: 20px;
+  animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

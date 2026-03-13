@@ -1,0 +1,13 @@
+{
+  "hosting": [
+    {
+      "target": "posbillingcgdsk",
+      "public": "dist",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ]
+    }
+  ]
+}
