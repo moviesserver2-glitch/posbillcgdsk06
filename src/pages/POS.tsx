@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { BarcodeScanner, BarcodeScannerHandle } from '@/components/pos/BarcodeScanner';
 import { Cart } from '@/components/pos/Cart';
@@ -15,7 +15,18 @@ export default function POSPage() {
     closeQuantityDialog,
   } = useCart();
 
-  const handleConfirmQuantity = (quantity: number, amount: number) => {
+  useEffect(() => {
+    // When the quantity dialog closes, refocus the barcode scanner
+    if (!isQuantityDialogOpen) {
+      // Use a timeout to ensure focus happens after other DOM updates
+      const timer = setTimeout(() => {
+        barcodeScannerRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isQuantityDialogOpen]);
+
+  const handleConfirmQuantity = (quantity: number, amount?: number) => {
     if (productToAdd) {
       if (quantity > productToAdd.stock) {
         toast.error(
@@ -26,13 +37,11 @@ export default function POSPage() {
       addToCart(productToAdd, quantity, amount);
       toast.success(`Added ${productToAdd.name} to cart`);
       closeQuantityDialog();
-      barcodeScannerRef.current?.focus();
     }
   };
 
   const handleDialogClose = () => {
     closeQuantityDialog();
-    barcodeScannerRef.current?.focus();
   };
 
   return (
@@ -52,7 +61,6 @@ export default function POSPage() {
         onClose={handleDialogClose}
         onConfirm={handleConfirmQuantity}
         productName={productToAdd?.name || ''}
-        productPrice={productToAdd?.price || 0}
       />
     </MainLayout>
   );
