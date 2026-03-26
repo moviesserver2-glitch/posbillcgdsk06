@@ -15,7 +15,7 @@ export default function POSPage() {
     closeQuantityDialog,
   } = useCart();
 
-  const handleConfirmQuantity = (quantity: number) => {
+  const handleConfirmQuantity = (quantity: number, amount: number) => {
     if (productToAdd) {
       if (quantity > productToAdd.stock) {
         toast.error(
@@ -23,7 +23,7 @@ export default function POSPage() {
         );
         return;
       }
-      addToCart(productToAdd, quantity);
+      addToCart(productToAdd, quantity, amount);
       toast.success(`Added ${productToAdd.name} to cart`);
       closeQuantityDialog();
       barcodeScannerRef.current?.focus();
@@ -52,6 +52,7 @@ export default function POSPage() {
         onClose={handleDialogClose}
         onConfirm={handleConfirmQuantity}
         productName={productToAdd?.name || ''}
+        productPrice={productToAdd?.price || 0}
       />
     </MainLayout>
   );

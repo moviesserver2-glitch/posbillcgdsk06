@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -41,7 +42,6 @@ const QrScanner = ({ onScanSuccess }: { onScanSuccess: QrCodeSuccessCallback }) 
   return <div id="qr-reader-container-inner" className="w-full" />;
 };
 
-
 export default function AddProductPage() {
   const navigate = useNavigate();
   const { products, addProduct } = useProducts();
@@ -52,9 +52,10 @@ export default function AddProductPage() {
     price: "",
     cost: "",
     stock: "",
-    lowStockThreshold: "10",
+    lowStockThreshold: "0",
     unit: "pcs",
   });
+  const [margin, setMargin] = useState("");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const nextSerial = useMemo(() => {
@@ -69,7 +70,26 @@ export default function AddProductPage() {
   }, [products]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.id]: e.target.value }));
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleCostChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newCost = e.target.value;
+    setFormData((prev) => ({ ...prev, cost: newCost }));
+    if (margin) {
+      const price = parseFloat(newCost) * (1 + parseFloat(margin) / 100);
+      setFormData((prev) => ({ ...prev, price: price.toFixed(2) }));
+    }
+  };
+
+  const handleMarginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newMargin = e.target.value;
+    setMargin(newMargin);
+    if (formData.cost) {
+      const price = parseFloat(formData.cost) * (1 + parseFloat(newMargin) / 100);
+      setFormData((prev) => ({ ...prev, price: price.toFixed(2) }));
+    }
   };
 
   const handleGenerateSerial = () => {
@@ -127,10 +147,11 @@ export default function AddProductPage() {
           <div className="space-y-2"><Label htmlFor="name">Product Name</Label><Input id="name" value={formData.name} onChange={handleInputChange} placeholder="Enter product name" /></div>
           <div className="space-y-2"><Label htmlFor="category">Category</Label><Input id="category" value={formData.category} onChange={handleInputChange} placeholder="Enter category" /></div>
           <div className="space-y-2"><Label htmlFor="unit">Unit</Label><Input id="unit" value={formData.unit} onChange={handleInputChange} placeholder="e.g., pcs, kg, ltr" /></div>
+          <div className="space-y-2"><Label htmlFor="cost">Purchase Cost (₹)</Label><Input id="cost" type="number" step="0.01" value={formData.cost} onChange={handleCostChange} placeholder="Enter purchase cost" /></div>
+          <div className="space-y-2"><Label htmlFor="margin">Margin (%)</Label><Input id="margin" type="number" step="0.01" value={margin} onChange={handleMarginChange} placeholder="Enter margin" /></div>
           <div className="space-y-2"><Label htmlFor="price">Selling Price (₹)</Label><Input id="price" type="number" step="0.01" value={formData.price} onChange={handleInputChange} placeholder="Enter selling price" /></div>
-          <div className="space-y-2"><Label htmlFor="cost">Purchase Cost (₹)</Label><Input id="cost" type="number" step="0.01" value={formData.cost} onChange={handleInputChange} placeholder="Enter purchase cost" /></div>
           <div className="space-y-2"><Label htmlFor="stock">Stock Quantity</Label><Input id="stock" type="number" value={formData.stock} onChange={handleInputChange} placeholder="Enter stock quantity" /></div>
-          <div className="space-y-2"><Label htmlFor="lowStockThreshold">Low Stock Alert Threshold</Label><Input id="lowStockThreshold" type="number" value={formData.lowStockThreshold} onChange={handleInputChange} placeholder="Enter threshold" /></div>
+          <div className="space-y-2"><Label htmlFor="lowStockThreshold">Low Stock Alert Threshold</Label><Input id="lowStockThreshold" type="number" value={formData.lowStockThreshold} onChange={handleInputChange} placeholder="Enter threshold" disabled /></div>
         </div>
 
         <div className="flex justify-center sm:justify-end mt-8">

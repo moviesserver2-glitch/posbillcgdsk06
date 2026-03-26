@@ -6,7 +6,7 @@ interface CartState {
   totalDiscount: number;
   isQuantityDialogOpen: boolean;
   productToAdd: Product | null;
-  addToCart: (product: Product, quantity?: number) => void;
+  addToCart: (product: Product, quantity?: number, amount?: number) => void;
   openQuantityDialog: (product: Product) => void;
   closeQuantityDialog: () => void;
   updateCartItemQuantity: (productId: string, quantity: number) => void;
@@ -22,22 +22,26 @@ const useCartStore = create<CartState>((set) => ({
   isQuantityDialogOpen: false,
   productToAdd: null,
 
-  addToCart: (product, quantity = 1) =>
+  addToCart: (product, quantity = 1, amount) =>
     set((state) => {
+      const unitPrice = amount !== undefined ? amount : product.price;
+      const productWithPrice = { ...product, price: unitPrice };
+
       const existingItem = state.cart.find(
-        (item) => item.product.id === product.id
+        (item) => item.product.id === product.id && item.product.price === unitPrice
       );
+
       if (existingItem) {
         return {
           cart: state.cart.map((item) =>
-            item.product.id === product.id
+            item.product.id === product.id && item.product.price === unitPrice
               ? { ...item, quantity: item.quantity + quantity }
               : item
           ),
         };
       }
       return {
-        cart: [...state.cart, { product, quantity, discount: 0, discountPercent: 0 }],
+        cart: [...state.cart, { product: productWithPrice, quantity, discount: 0, discountPercent: 0 }],
       };
     }),
 

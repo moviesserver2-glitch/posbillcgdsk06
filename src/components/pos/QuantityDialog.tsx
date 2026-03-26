@@ -8,12 +8,12 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface QuantityDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (quantity: number) => void;
+  onConfirm: (quantity: number, amount?: number) => void;
   productName: string;
 }
 
@@ -24,21 +24,33 @@ export function QuantityDialog({
   productName,
 }: QuantityDialogProps) {
   const [quantity, setQuantity] = useState('');
+  const [amount, setAmount] = useState('');
+  const amountInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setQuantity('');
+      setAmount('');
     }
   }, [isOpen]);
 
   const handleConfirm = () => {
-    const numQuantity = Number(quantity);
-    if (numQuantity > 0) {
-      onConfirm(numQuantity);
+    if (amount !== '' && Number(amount) < 0) {
+        return;
+    }
+    const numQuantity = Number(quantity) || 1;
+    const numAmount = amount === '' ? undefined : Number(amount);
+    onConfirm(numQuantity, numAmount);
+  };
+
+  const handleQuantityKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      amountInputRef.current?.focus();
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleAmountKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleConfirm();
     }
@@ -48,19 +60,29 @@ export function QuantityDialog({
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Enter quantity for {productName}</AlertDialogTitle>
+          <AlertDialogTitle>Enter quantity and amount for {productName}</AlertDialogTitle>
         </AlertDialogHeader>
-        <Input
-          type="number"
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="Enter quantity"
-          autoFocus
-        />
+        <div className="space-y-4">
+          <Input
+            type="number"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            onKeyPress={handleQuantityKeyPress}
+            placeholder="Quantity (default: 1)"
+            autoFocus
+          />
+          <Input
+            ref={amountInputRef}
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            onKeyPress={handleAmountKeyPress}
+            placeholder="Amount (optional)"
+          />
+        </div>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirm} disabled={!quantity || Number(quantity) <= 0}>
+          <AlertDialogAction onClick={handleConfirm} disabled={amount !== '' && Number(amount) < 0}>
             Add
           </AlertDialogAction>
         </AlertDialogFooter>
