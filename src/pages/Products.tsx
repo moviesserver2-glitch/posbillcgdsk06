@@ -1,21 +1,67 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useProducts } from '@/hooks/useProducts';
 import { Product } from '@/types/product';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Search, Loader2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Plus, Trash2, Search, Loader2, ScanBarcode, X } from 'lucide-react';
 import { formatINR } from '@/lib/currency';
 import { Link } from 'react-router-dom';
+import { Html5QrcodeScanner, QrCodeSuccessCallback } from 'html5-qrcode';
 
 type EditableProductField = keyof Omit<Product, 'id' | 'unit' | 'lowStockThreshold'>;
+
+const ProductQrScanner = ({ onScanSuccess }: { onScanSuccess: QrCodeSuccessCallback }) => {
+  useEffect(() => {
+    const scanner = new Html5QrcodeScanner(
+      'product-qr-reader',
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      false
+    );
+
+    scanner.render(onScanSuccess, () => {
+      // ignore scan errors
+    });
+
+    return () => {
+      scanner.clear().catch(() => {
+        // ignore cleanup errors
+      });
+    };
+  }, [onScanSuccess]);
+
+  return <div id="product-qr-reader" className="w-full" />;
+};
 
 export default function ProductsPage() {
   const { products, isLoading, updateProduct, deleteProduct } = useProducts();
 
   const [search, setSearch] = useState('');
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [scannedProduct, setScannedProduct] = useState<Product | null>(null);
   const [editingCell, setEditingCell] = useState<{ productId: string; field: EditableProductField } | null>(null);
   const [editValue, setEditValue] = useState('');
+
+  const handleQrScanSuccess: QrCodeSuccessCallback = (decodedText) => {
+    const trimmedCode = decodedText.trim();
+    const product = products.find((p) => p.barcode === trimmedCode);
+    if (product) {
+      setScannedProduct(product);
+      setSearch(trimmedCode);
+    } else {
+      setScannedProduct(null);
+    }
+    setIsScannerOpen(false);
+  };
 
   const filteredProducts = products.filter(
     (p) =>
@@ -93,15 +139,39 @@ export default function ProductsPage() {
           </Link>
         </div>
 
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search products..."
-            className="pl-10"
-          />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
+          <div className="relative flex-1 max-w-md w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search products..."
+              className="pl-10"
+            />
+          </div>
+
+          <Button type="button" variant="secondary" className="gap-2"
+            onClick={() => setIsScannerOpen(true)}>
+            <ScanBarcode className="h-4 w-4" />
+            Scan QR
+          </Button>
         </div>
+
+        {scannedProduct && (
+          <div className="mb-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm uppercase tracking-[0.2em] text-primary">Scanned product</p>
+                <p className="text-lg font-semibold">{scannedProduct.name}</p>
+                <p className="text-muted-foreground">Barcode: {scannedProduct.barcode}</p>
+                <p className="text-muted-foreground">Category: {scannedProduct.category}</p>
+              </div>
+              <button type="button" className="text-muted-foreground hover:text-destructive" onClick={() => setScannedProduct(null)}>
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="pos-card overflow-hidden">
           <div className="overflow-x-auto">
@@ -170,6 +240,23 @@ export default function ProductsPage() {
             )}
           </div>
         </div>
+
+        <Dialog open={isScannerOpen} onOpenChange={setIsScannerOpen}>
+          <DialogContent className="w-[90vw] max-w-md">
+            <DialogHeader>
+              <DialogTitle>Scan product QR</DialogTitle>
+              <DialogDescription>Allow camera access and point the camera at a product QR/barcode.</DialogDescription>
+            </DialogHeader>
+            <div className="my-4">
+              {isScannerOpen && <ProductQrScanner onScanSuccess={handleQrScanSuccess} />}
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">Cancel</Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );
