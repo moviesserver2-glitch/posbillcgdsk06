@@ -251,7 +251,26 @@ export default function ProductsPage() {
                       )}
                     </div>
                     <h3 className="font-semibold text-base">{product.name}</h3>
-                    <p className="text-sm text-muted-foreground break-words">Barcode: {product.barcode}</p>
+                    <div className="text-sm text-muted-foreground break-words">
+                      <span className="font-medium">Barcode: </span>
+                      {editingCell?.productId === product.id && editingCell?.field === 'barcode' ? (
+                        <Input
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={() => handleUpdate(product.id, 'barcode')}
+                          onKeyDown={(e) => handleKeyDown(e, product.id, 'barcode')}
+                          autoFocus
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleCellClick(product.id, 'barcode', product.barcode)}
+                          className="inline-flex text-left font-medium underline-offset-2 hover:underline"
+                        >
+                          {product.barcode}
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <Button
                     variant="ghost"
