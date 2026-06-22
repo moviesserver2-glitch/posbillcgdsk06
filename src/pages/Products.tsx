@@ -174,7 +174,7 @@ export default function ProductsPage() {
         )}
 
         <div className="pos-card overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto hidden md:block">
             <table className="w-full table-auto">
               <thead className="bg-secondary">
                 <tr>
@@ -235,10 +235,122 @@ export default function ProductsPage() {
                 ))}
               </tbody>
             </table>
-            {filteredProducts.length === 0 && (
-              <div className="p-8 text-center text-muted-foreground">No products found</div>
-            )}
           </div>
+
+          <div className="grid gap-4 p-4 md:hidden">
+            {filteredProducts.map((product) => (
+              <div key={product.id} className="pos-card p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                        {product.category}
+                      </span>
+                      {product.stock <= product.lowStockThreshold && (
+                        <span className="badge-low-stock">Low</span>
+                      )}
+                    </div>
+                    <h3 className="font-semibold text-base">{product.name}</h3>
+                    <p className="text-sm text-muted-foreground break-words">Barcode: {product.barcode}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(product.id)}
+                    className="text-destructive hover:text-destructive"
+                    disabled={deleteProduct.isPending}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mt-4 text-sm">
+                  <button
+                    type="button"
+                    onClick={() => handleCellClick(product.id, 'price', product.price)}
+                    className="text-left rounded-lg border border-border p-3 text-muted-foreground hover:border-primary"
+                  >
+                    <div className="font-medium text-foreground">Price</div>
+                    {editingCell?.productId === product.id && editingCell?.field === 'price' ? (
+                      <Input
+                        type="number"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={() => handleUpdate(product.id, 'price')}
+                        onKeyDown={(e) => handleKeyDown(e, product.id, 'price')}
+                        autoFocus
+                      />
+                    ) : (
+                      <div>{formatINR(product.price)}</div>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleCellClick(product.id, 'cost', product.cost)}
+                    className="text-left rounded-lg border border-border p-3 text-muted-foreground hover:border-primary"
+                  >
+                    <div className="font-medium text-foreground">Cost</div>
+                    {editingCell?.productId === product.id && editingCell?.field === 'cost' ? (
+                      <Input
+                        type="number"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={() => handleUpdate(product.id, 'cost')}
+                        onKeyDown={(e) => handleKeyDown(e, product.id, 'cost')}
+                        autoFocus
+                      />
+                    ) : (
+                      <div>{formatINR(product.cost)}</div>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleCellClick(product.id, 'stock', product.stock)}
+                    className="text-left rounded-lg border border-border p-3 text-muted-foreground hover:border-primary"
+                  >
+                    <div className="font-medium text-foreground">Stock</div>
+                    {editingCell?.productId === product.id && editingCell?.field === 'stock' ? (
+                      <Input
+                        type="number"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={() => handleUpdate(product.id, 'stock')}
+                        onKeyDown={(e) => handleKeyDown(e, product.id, 'stock')}
+                        autoFocus
+                      />
+                    ) : (
+                      <div>{product.stock}</div>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleCellClick(product.id, 'category', product.category)}
+                    className="text-left rounded-lg border border-border p-3 text-muted-foreground hover:border-primary"
+                  >
+                    <div className="font-medium text-foreground">Category</div>
+                    {editingCell?.productId === product.id && editingCell?.field === 'category' ? (
+                      <Input
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={() => handleUpdate(product.id, 'category')}
+                        onKeyDown={(e) => handleKeyDown(e, product.id, 'category')}
+                        autoFocus
+                      />
+                    ) : (
+                      <div>{product.category}</div>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {filteredProducts.length === 0 && (
+            <div className="p-8 text-center text-muted-foreground">No products found</div>
+          )}
         </div>
 
         <Dialog open={isScannerOpen} onOpenChange={setIsScannerOpen}>
